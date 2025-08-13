@@ -1,39 +1,28 @@
 import 'package:flutter/material.dart';
 
-  // dimensions
-  int rowLength = 10;
-  int colLength = 15;
+// dimensions
+const int rowLength = 10;
+const int colLength = 15;
 
-enum Direction{
-  left,
-  right,
-  down
-}
+enum Direction { left, right, down }
 
-enum Tetronimo{
-  L,
-  J,
-  I,
-  O,
-  S,
-  Z,
-  T,
-}
+enum Tetronimo { L, J, I, O, S, Z, T }
 
 final Map<Tetronimo, Color> tetronimoColors = {
-  Tetronimo.L: L,
-  Tetronimo.J: J,
-  Tetronimo.I: I,
-  Tetronimo.O: O,
-  Tetronimo.S: S,
-  Tetronimo.Z: Z,
-  Tetronimo.T: T,
+  Tetronimo.L: Colors.orange,
+  Tetronimo.J: Colors.blue,
+  Tetronimo.I: Colors.cyan,
+  Tetronimo.O: Colors.yellow,
+  Tetronimo.S: Colors.green,
+  Tetronimo.Z: Colors.red,
+  Tetronimo.T: Colors.purple,
 };
 
-Color L = Colors.orange;
-Color J = Colors.blue;
-Color I = Colors.purple;
-Color O = Colors.amber;
-Color S = Colors.green;
-Color Z = Colors.red;
-Color T = Colors.cyan;
+// Sistema de pontuação
+const int pointsPerPiece = 5; // Pontos por peça que aterrissa
+const Map<int, int> pointsPerLine = {
+  1: 100, 
+  2: 300, 
+  3: 500, 
+  4: 800, // Tetris
+};

@@ -1,433 +1,124 @@
-import 'package:custom_tetris/game_board.dart';
 import 'package:custom_tetris/values.dart';
 import 'package:flutter/material.dart';
 
 class Piece {
+  // tipo do tetronimo (L, J, T, etc)
   Tetronimo type;
-  int lowest;
 
-  Piece({required this.type, this.lowest = 14});
+  // formato da peça
+  List<List<int>> shape = [];
 
-  List<int> position = [];
+  // posição da peça no tabuleiro
+  int row = 0;
+  int col = 0;
 
+  // estado da rotação
+  int rotationState = 0;
+
+  // cor da peça
   Color get color {
-    return tetronimoColors[type] ?? Colors.white;
+    return tetronimoColors[type]!;
   }
 
-  void inicializePiece() {
+  Piece({required this.type}) {
+    // inicializa a peça com sua forma e posição
+    initializePiece();
+  }
+
+  void initializePiece() {
+    // Define a forma de cada peça como uma matriz 2D
     switch (type) {
       case Tetronimo.L:
-        position = [
-          lowest,
-          lowest + rowLength,
-          lowest - rowLength,
-          lowest + rowLength + 1,
+        shape = [
+          [0, 1, 0],
+          [0, 1, 0],
+          [0, 1, 1],
         ];
         break;
       case Tetronimo.J:
-        position = [
-          lowest,
-          lowest + rowLength,
-          lowest + (rowLength * 2),
-          lowest + (rowLength * 2) - 1,
+        shape = [
+          [0, 1, 0],
+          [0, 1, 0],
+          [1, 1, 0],
         ];
         break;
       case Tetronimo.I:
-        position = [lowest, lowest + 1, lowest + 2, lowest + 3];
+        shape = [
+          [0, 0, 0, 0],
+          [1, 1, 1, 1],
+          [0, 0, 0, 0],
+          [0, 0, 0, 0],
+        ];
         break;
       case Tetronimo.O:
-        position = [
-          lowest,
-          lowest + rowLength,
-          lowest - 1,
-          lowest + rowLength - 1,
+        shape = [
+          [1, 1],
+          [1, 1],
         ];
         break;
       case Tetronimo.S:
-        position = [
-          lowest,
-          lowest - 1,
-          lowest - rowLength,
-          lowest - rowLength + 1,
+        shape = [
+          [0, 1, 1],
+          [1, 1, 0],
+          [0, 0, 0],
         ];
         break;
       case Tetronimo.Z:
-        position = [
-          lowest,
-          lowest + 1,
-          lowest - rowLength,
-          lowest - rowLength - 1,
+        shape = [
+          [1, 1, 0],
+          [0, 1, 1],
+          [0, 0, 0],
         ];
         break;
       case Tetronimo.T:
-        position = [
-          lowest,
-          lowest - rowLength,
-          lowest - rowLength + 1,
-          lowest - (rowLength * 2),
+        shape = [
+          [0, 0, 0],
+          [1, 1, 1],
+          [0, 1, 0],
         ];
         break;
     }
+
+    // Posição inicial no topo e no centro
+    row = -2; // Começa um pouco acima da tela
+    col = 3;
   }
 
+  // move a peça
   void movePiece(Direction direction) {
     switch (direction) {
       case Direction.down:
-        for (int i = 0; i < position.length; i++) {
-          position[i] += rowLength;
-        }
+        row++;
         break;
       case Direction.left:
-        for (int i = 0; i < position.length; i++) {
-          position[i] -= 1;
-        }
+        col--;
         break;
       case Direction.right:
-        for (int i = 0; i < position.length; i++) {
-          position[i] += 1;
-        }
+        col++;
         break;
     }
   }
 
-  int rotationState = 1;
+  // rotaciona a peça
   void rotatePiece() {
-    // new position
-    List<int> newPosition = [];
+    // A peça 'O' não rotaciona
+    if (type == Tetronimo.O) return;
 
-    // rotate the piece based on it's type
-    switch (type) {
-      case Tetronimo.L:
-        switch (rotationState) {
-          case 0:
-            newPosition = [
-              position[1] - rowLength,
-              position[1],
-              position[1] + rowLength,
-              position[1] + rowLength + 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 1:
-            newPosition = [
-              position[1] - rowLength + 1,
-              position[1],
-              position[1] - 1,
-              position[1] + 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 2:
-            newPosition = [
-              position[1] - rowLength,
-              position[1],
-              position[1] + rowLength,
-              position[1] - rowLength - 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 3:
-            newPosition = [
-              position[1] + rowLength - 1,
-              position[1],
-              position[1] + 1,
-              position[1] - 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-            break;
-        }
-        break;
-      case Tetronimo.J:
-        switch (rotationState) {
-          case 0:
-            newPosition = [
-              position[1] - rowLength,
-              position[1],
-              position[1] + rowLength,
-              position[1] + rowLength - 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 1:
-            newPosition = [
-              position[1] - rowLength - 1,
-              position[1],
-              position[1] + 1,
-              position[1] - 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 2:
-            newPosition = [
-              position[1] - rowLength,
-              position[1],
-              position[1] + rowLength,
-              position[1] - rowLength + 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 3:
-            newPosition = [
-              position[1] - 1,
-              position[1],
-              position[1] + 1,
-              position[1] - (rowLength * 2),
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-            break;
-        }
-        break;
-      case Tetronimo.I:
-        switch (rotationState) {
-          case 0:
-            newPosition = [
-              position[1] - rowLength,
-              position[1],
-              position[1] + rowLength,
-              position[1] + rowLength - 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 1:
-            newPosition = [
-              position[1] - rowLength - 1,
-              position[1],
-              position[1] + 1,
-              position[1] - 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 2:
-            newPosition = [
-              position[1] - rowLength,
-              position[1],
-              position[1] + rowLength,
-              position[1] - rowLength + 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 3:
-            newPosition = [
-              position[1] - rowLength,
-              position[1],
-              position[1] + rowLength,
-              position[1] - (rowLength * 2),
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-            break;
-        }
-        break;
-      case Tetronimo.O:
-        switch (rotationState) {
-          case 0:
-            break;
-        }
-        break;
-      case Tetronimo.S:
-        switch (rotationState) {
-          case 0:
-            newPosition = [
-              position[1] - rowLength,
-              position[1],
-              position[1] + rowLength,
-              position[1] + rowLength - 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 1:
-            newPosition = [
-              position[1] - rowLength - 1,
-              position[1],
-              position[1] + 1,
-              position[1] + 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 2:
-            newPosition = [
-              position[1] - rowLength,
-              position[1],
-              position[1] + rowLength,
-              position[1] - rowLength - 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 3:
-            newPosition = [
-              position[1] - rowLength + 1,
-              position[1],
-              position[1] + 1,
-              position[1] - 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-            break;
-        }
-        break;
-      case Tetronimo.Z:
-        switch (rotationState) {
-          case 0:
-            newPosition = [
-              position[1] - rowLength,
-              position[1],
-              position[1] + rowLength,
-              position[1] + rowLength - 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 1:
-            newPosition = [
-              position[1] - rowLength - 1,
-              position[1],
-              position[1] + 1,
-              position[1] + 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 2:
-            newPosition = [
-              position[1] - rowLength,
-              position[1],
-              position[1] + rowLength,
-              position[1] - rowLength - 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 3:
-            newPosition = [
-              position[1] - rowLength + 1,
-              position[1],
-              position[1] + 1,
-              position[1] - 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-            break;
-        }
-        break;
-      case Tetronimo.T:
-        switch (rotationState) {
-          case 0:
-            newPosition = [
-              position[1] - rowLength,
-              position[1],
-              position[1] + 1,
-              position[1] + rowLength,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 1:
-            newPosition = [
-              position[1] - rowLength,
-              position[1],
-              position[1] + 1,
-              position[1] - 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 2:
-            newPosition = [
-              position[1] - rowLength,
-              position[1],
-              position[1] + rowLength,
-              position[1] - 1,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-          case 3:
-            newPosition = [
-              position[1] - 1,
-              position[1],
-              position[1] + 1,
-              position[1] - rowLength,
-            ];
-            if (piecePositionIsValid(newPosition)) {
-              position = newPosition;
-              rotationState = (rotationState + 1) % 4;
-            }
-            break;
-        }
-        break;
-    }
-  }
+    // Algoritmo de Rotação
+    List<List<int>> newShape = List.generate(
+      shape[0].length,
+      (i) => List.generate(shape.length, (j) => 0),
+    );
 
-  bool positionIsValid(int position) {
-    // get the position
-    int row = (position / rowLength).floor();
-    int col = position % rowLength;
-
-    //
-    if (row < 0 || col < 0 || gameBoard[row][col] != null ) {
-      return false;
-    } else {
-      return true;
-    }
-  }
-
-  bool piecePositionIsValid(List<int> piecePosition) {
-    bool firstColOccupied = false;
-    bool lastColOccupied = false;
-
-    for (int pos in piecePosition) {
-      if (positionIsValid(pos) != true) {
-        return false;
+    for (int i = 0; i < shape.length; i++) {
+      for (int j = 0; j < shape[i].length; j++) {
+        // transpõe e reverte as linhas para girar 90 graus
+        newShape[j][shape.length - 1 - i] = shape[i][j];
       }
-
-      int col = pos % rowLength;
-
-      if (col == 0) firstColOccupied = true;
-      if (col == rowLength - 1) lastColOccupied = true;
     }
 
-    return !(firstColOccupied && lastColOccupied);
+    // atualiza o formato
+    shape = newShape;
+    rotationState = (rotationState + 1) % 4;
   }
 }
