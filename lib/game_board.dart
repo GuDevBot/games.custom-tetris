@@ -20,29 +20,64 @@ class GameBoard extends StatefulWidget {
 }
 
 class _GameBoardState extends State<GameBoard> {
-  // Peça atual
   Piece currentPiece = Piece(type: Tetronimo.L);
   int score = 0;
   bool gameOver = false;
 
-  // NOVO: Players de áudio
+  // NOVO: Variáveis para o estado de pause e para o timer do jogo
+  bool isPaused = false;
+  Timer? gameTimer;
+
   final AudioPlayer backgroundMusicPlayer = AudioPlayer();
   final AudioPlayer soundEffectPlayer = AudioPlayer();
+
+  final AudioContext _audioContextMusic = AudioContext(
+    android: const AudioContextAndroid(
+      isSpeakerphoneOn: true,
+      stayAwake: true,
+      contentType: AndroidContentType.music,
+      usageType: AndroidUsageType.media,
+      audioFocus: AndroidAudioFocus.gain,
+    ),
+    iOS: AudioContextIOS(
+      category: AVAudioSessionCategory.playback,
+      options: {
+        AVAudioSessionOptions.mixWithOthers,
+      },
+    ),
+  );
+
+  final AudioContext _audioContextEffects = AudioContext(
+    android: const AudioContextAndroid(
+      isSpeakerphoneOn: true,
+      stayAwake: true,
+      contentType: AndroidContentType.sonification,
+      usageType: AndroidUsageType.game,
+      audioFocus: AndroidAudioFocus.gainTransientMayDuck,
+    ),
+    iOS: AudioContextIOS(
+      category: AVAudioSessionCategory.ambient,
+    ),
+  );
+
 
   @override
   void initState() {
     super.initState();
+    backgroundMusicPlayer.setAudioContext(_audioContextMusic);
+    soundEffectPlayer.setAudioContext(_audioContextEffects);
+    
     startGame();
   }
   
   @override
   void dispose() {
-    // Para a música ao sair da tela
+    // MODIFICADO: Cancela o timer ao sair da tela para evitar erros
+    gameTimer?.cancel(); 
     backgroundMusicPlayer.dispose();
     soundEffectPlayer.dispose();
     super.dispose();
   }
-
 
   void startGame() {
     playBackgroundMusic();
@@ -52,7 +87,6 @@ class _GameBoardState extends State<GameBoard> {
     gameLoop(frameRate);
   }
 
-  // Funções de áudio
   void playBackgroundMusic() async {
     await backgroundMusicPlayer.setReleaseMode(ReleaseMode.loop);
     await backgroundMusicPlayer.play(AssetSource('audio/background_music.mp3'));
@@ -62,8 +96,9 @@ class _GameBoardState extends State<GameBoard> {
     await soundEffectPlayer.play(AssetSource('audio/$sound'));
   }
 
+  // MODIFICADO: O gameLoop agora atribui o timer à variável gameTimer
   void gameLoop(Duration frameRate) {
-    Timer.periodic(frameRate, (timer) {
+    gameTimer = Timer.periodic(frameRate, (timer) {
       if (gameOver) {
         timer.cancel();
         showGameOverDialog();
@@ -79,8 +114,23 @@ class _GameBoardState extends State<GameBoard> {
       });
     });
   }
+  
+  // NOVO: Função para pausar e retomar o jogo
+  void togglePause() {
+    setState(() {
+      isPaused = !isPaused;
+      if (isPaused) {
+        gameTimer?.cancel();
+        backgroundMusicPlayer.pause();
+      } else {
+        backgroundMusicPlayer.resume();
+        startGame(); // Recria o loop do jogo
+      }
+    });
+  }
 
   void showGameOverDialog() {
+    gameTimer?.cancel();
     backgroundMusicPlayer.stop();
     playSoundEffect('game_over.mp3');
 
@@ -106,10 +156,12 @@ class _GameBoardState extends State<GameBoard> {
   void resetGame() {
     gameBoard = List.generate(colLength, (i) => List.generate(rowLength, (j) => null));
     gameOver = false;
+    isPaused = false; // Garante que o jogo não comece pausado
     score = 0;
     startGame();
   }
 
+  // ... (O resto das funções de lógica do jogo permanecem iguais)
   bool checkCollision(Direction direction, Piece piece) {
     for (int i = 0; i < piece.shape.length; i++) {
       for (int j = 0; j < piece.shape[i].length; j++) {
@@ -134,7 +186,6 @@ class _GameBoardState extends State<GameBoard> {
   }
 
   void landPiece() {
-    // Toca o som da peça aterrissando
     playSoundEffect('landing.mp3');
 
     for (int i = 0; i < currentPiece.shape.length; i++) {
@@ -170,6 +221,7 @@ class _GameBoardState extends State<GameBoard> {
   }
 
   void createNewPiece() {
+    if (isPaused) return; // Não cria nova peça se estiver pausado
     Random rand = Random();
     Tetronimo randomType = Tetronimo.values[rand.nextInt(Tetronimo.values.length)];
     currentPiece = Piece(type: randomType);
@@ -198,7 +250,6 @@ class _GameBoardState extends State<GameBoard> {
 
     if (linesCleared > 0) {
       playSoundEffect('clear_line.mp3');
-
       setState(() {
         score += pointsPerLine[linesCleared] ?? 0;
       });
@@ -206,6 +257,7 @@ class _GameBoardState extends State<GameBoard> {
   }
 
   void moveLeft() {
+    if (isPaused) return;
     if (!checkCollision(Direction.left, currentPiece)) {
       setState(() {
         currentPiece.movePiece(Direction.left);
@@ -214,14 +266,25 @@ class _GameBoardState extends State<GameBoard> {
   }
 
   void moveRight() {
+    if (isPaused) return;
     if (!checkCollision(Direction.right, currentPiece)) {
       setState(() {
         currentPiece.movePiece(Direction.right);
       });
     }
   }
+  
+  void moveDown() {
+    if (isPaused) return;
+    if (!checkCollision(Direction.down, currentPiece)) {
+      setState(() {
+        currentPiece.movePiece(Direction.down);
+      });
+    }
+  }
 
   void rotatePiece() {
+    if (isPaused) return;
     setState(() {
       Piece testPiece = Piece(type: currentPiece.type);
       testPiece.row = currentPiece.row;
@@ -236,67 +299,116 @@ class _GameBoardState extends State<GameBoard> {
     });
   }
 
+
+  // MODIFICADO: A UI agora é construída dentro de um Stack
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Column(
+      body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 50.0, bottom: 20.0),
-            child: Text(
-              "Score: $score",
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+          // Jogo Principal
+          Column(
+            children: [
+              // Placar
+              Padding(
+                padding: const EdgeInsets.only(top: 50.0, bottom: 20.0),
+                child: Text(
+                  "Score: $score",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            ),
-          ),
-          Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: rowLength,
-              ),
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: rowLength * colLength,
-              itemBuilder: (context, index) {
-                int row = (index / rowLength).floor();
-                int col = index % rowLength;
-                bool isCurrentPiecePixel = false;
-                for (int i = 0; i < currentPiece.shape.length; i++) {
-                  for (int j = 0; j < currentPiece.shape[i].length; j++) {
-                    if (currentPiece.shape[i][j] == 1) {
-                      if (currentPiece.row + i == row && currentPiece.col + j == col) {
-                        isCurrentPiecePixel = true;
-                        break;
+              // Tabuleiro
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: rowLength,
+                  ),
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: rowLength * colLength,
+                  itemBuilder: (context, index) {
+                    int row = (index / rowLength).floor();
+                    int col = index % rowLength;
+                    bool isCurrentPiecePixel = false;
+                    for (int i = 0; i < currentPiece.shape.length; i++) {
+                      for (int j = 0; j < currentPiece.shape[i].length; j++) {
+                        if (currentPiece.shape[i][j] == 1) {
+                          if (currentPiece.row + i == row && currentPiece.col + j == col) {
+                            isCurrentPiecePixel = true;
+                            break;
+                          }
+                        }
                       }
+                      if (isCurrentPiecePixel) break;
                     }
-                  }
-                  if (isCurrentPiecePixel) break;
-                }
-                if (isCurrentPiecePixel) {
-                  return Pixel(color: currentPiece.color);
-                } else if (gameBoard[row][col] != null) {
-                  final Tetronimo? tetronimoType = gameBoard[row][col];
-                  return Pixel(color: tetronimoColors[tetronimoType]);
-                } else {
-                  return Pixel(color: Colors.grey[900]);
-                }
-              },
+                    if (isCurrentPiecePixel) {
+                      return Pixel(color: currentPiece.color);
+                    } else if (gameBoard[row][col] != null) {
+                      final Tetronimo? tetronimoType = gameBoard[row][col];
+                      return Pixel(color: tetronimoColors[tetronimoType]);
+                    } else {
+                      return Pixel(color: Colors.grey[900]);
+                    }
+                  },
+                ),
+              ),
+              // Controles
+              Padding(
+                padding: const EdgeInsets.only(bottom: 50.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(onPressed: isPaused ? null : moveLeft, color: Colors.white, icon: const Icon(Icons.arrow_back_ios_new)),
+                    IconButton(onPressed: isPaused ? null : rotatePiece, color: Colors.white, icon: const Icon(Icons.rotate_right)),
+                    IconButton(onPressed: isPaused ? null : moveDown, color: Colors.white, icon: const Icon(Icons.arrow_downward)),
+                    IconButton(onPressed: isPaused ? null : moveRight, color: Colors.white, icon: const Icon(Icons.arrow_forward_ios)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // NOVO: Botão de Pause no canto superior direito
+          Align(
+            alignment: Alignment.topRight,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 40.0, right: 20.0),
+              child: IconButton(
+                icon: Icon(isPaused ? Icons.play_arrow : Icons.pause, color: Colors.white, size: 30),
+                onPressed: togglePause,
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 50.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(onPressed: moveLeft, color: Colors.white, icon: const Icon(Icons.arrow_back_ios_new)),
-                IconButton(onPressed: rotatePiece, color: Colors.white, icon: const Icon(Icons.rotate_right)),
-                IconButton(onPressed: moveRight, color: Colors.white, icon: const Icon(Icons.arrow_forward_ios)),
-              ],
+          
+          // NOVO: Tela de Pause
+          if (isPaused)
+            Container(
+              color: Colors.black.withOpacity(0.75),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'PAUSADO',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    IconButton(
+                      icon: const Icon(Icons.play_arrow, color: Colors.white, size: 50),
+                      onPressed: togglePause, // O mesmo botão retoma o jogo
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );
