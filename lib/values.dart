@@ -18,11 +18,11 @@ final Map<Tetronimo, Color> tetronimoColors = {
   Tetronimo.T: Colors.purple,
 };
 
-// Sistema de pontuação
-const int pointsPerPiece = 5; // Pontos por peça que aterrissa
+// Score system
+const int pointsPerPiece = 5;
 const Map<int, int> pointsPerLine = {
-  1: 100, 
-  2: 300, 
-  3: 500, 
-  4: 800, // Tetris
+  1: 100,
+  2: 300,
+  3: 500,
+  4: 800,
 };

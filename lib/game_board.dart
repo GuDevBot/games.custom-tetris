@@ -6,7 +6,6 @@ import 'package:custom_tetris/components/pixel.dart';
 import 'package:custom_tetris/values.dart';
 import 'package:flutter/material.dart';
 
-// Cria o tabuleiro do jogo como uma matriz 2D vazia
 List<List<Tetronimo?>> gameBoard = List.generate(
   colLength,
   (i) => List.generate(rowLength, (j) => null),
@@ -23,8 +22,6 @@ class _GameBoardState extends State<GameBoard> {
   Piece currentPiece = Piece(type: Tetronimo.L);
   int score = 0;
   bool gameOver = false;
-
-  // NOVO: Variáveis para o estado de pause e para o timer do jogo
   bool isPaused = false;
   Timer? gameTimer;
 
@@ -72,7 +69,6 @@ class _GameBoardState extends State<GameBoard> {
   
   @override
   void dispose() {
-    // MODIFICADO: Cancela o timer ao sair da tela para evitar erros
     gameTimer?.cancel(); 
     backgroundMusicPlayer.dispose();
     soundEffectPlayer.dispose();
@@ -96,7 +92,6 @@ class _GameBoardState extends State<GameBoard> {
     await soundEffectPlayer.play(AssetSource('audio/$sound'));
   }
 
-  // MODIFICADO: O gameLoop agora atribui o timer à variável gameTimer
   void gameLoop(Duration frameRate) {
     gameTimer = Timer.periodic(frameRate, (timer) {
       if (gameOver) {
@@ -115,7 +110,6 @@ class _GameBoardState extends State<GameBoard> {
     });
   }
   
-  // NOVO: Função para pausar e retomar o jogo
   void togglePause() {
     setState(() {
       isPaused = !isPaused;
@@ -124,7 +118,7 @@ class _GameBoardState extends State<GameBoard> {
         backgroundMusicPlayer.pause();
       } else {
         backgroundMusicPlayer.resume();
-        startGame(); // Recria o loop do jogo
+        startGame();
       }
     });
   }
@@ -139,14 +133,14 @@ class _GameBoardState extends State<GameBoard> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text("Game Over"),
-        content: Text("Sua pontuação: $score"),
+        content: Text("Score: $score"),
         actions: [
           TextButton(
             onPressed: () {
               resetGame();
               Navigator.pop(context);
             },
-            child: const Text("Jogar Novamente"),
+            child: const Text("Play Again"),
           ),
         ],
       ),
@@ -156,12 +150,11 @@ class _GameBoardState extends State<GameBoard> {
   void resetGame() {
     gameBoard = List.generate(colLength, (i) => List.generate(rowLength, (j) => null));
     gameOver = false;
-    isPaused = false; // Garante que o jogo não comece pausado
+    isPaused = false;
     score = 0;
     startGame();
   }
 
-  // ... (O resto das funções de lógica do jogo permanecem iguais)
   bool checkCollision(Direction direction, Piece piece) {
     for (int i = 0; i < piece.shape.length; i++) {
       for (int j = 0; j < piece.shape[i].length; j++) {
@@ -221,7 +214,7 @@ class _GameBoardState extends State<GameBoard> {
   }
 
   void createNewPiece() {
-    if (isPaused) return; // Não cria nova peça se estiver pausado
+    if (isPaused) return;
     Random rand = Random();
     Tetronimo randomType = Tetronimo.values[rand.nextInt(Tetronimo.values.length)];
     currentPiece = Piece(type: randomType);
@@ -299,18 +292,14 @@ class _GameBoardState extends State<GameBoard> {
     });
   }
 
-
-  // MODIFICADO: A UI agora é construída dentro de um Stack
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Jogo Principal
           Column(
             children: [
-              // Placar
               Padding(
                 padding: const EdgeInsets.only(top: 50.0, bottom: 20.0),
                 child: Text(
@@ -322,7 +311,6 @@ class _GameBoardState extends State<GameBoard> {
                   ),
                 ),
               ),
-              // Tabuleiro
               Expanded(
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -356,7 +344,6 @@ class _GameBoardState extends State<GameBoard> {
                   },
                 ),
               ),
-              // Controles
               Padding(
                 padding: const EdgeInsets.only(bottom: 50.0),
                 child: Row(
@@ -371,8 +358,6 @@ class _GameBoardState extends State<GameBoard> {
               ),
             ],
           ),
-
-          // NOVO: Botão de Pause no canto superior direito
           Align(
             alignment: Alignment.topRight,
             child: Padding(
@@ -383,17 +368,15 @@ class _GameBoardState extends State<GameBoard> {
               ),
             ),
           ),
-          
-          // NOVO: Tela de Pause
           if (isPaused)
             Container(
-              color: Colors.black.withOpacity(0.75),
+              color: Colors.black12,
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      'PAUSADO',
+                      'Paused',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 32,
@@ -403,7 +386,7 @@ class _GameBoardState extends State<GameBoard> {
                     const SizedBox(height: 20),
                     IconButton(
                       icon: const Icon(Icons.play_arrow, color: Colors.white, size: 50),
-                      onPressed: togglePause, // O mesmo botão retoma o jogo
+                      onPressed: togglePause,
                     ),
                   ],
                 ),
