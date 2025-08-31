@@ -1,6 +1,6 @@
 # Custom Tetris com Flutter
 
-![Logo do Custom Tetris](https://github.com/GuDevBot/games.custom-tetris/blob/main/assets/images/tetris_transparent.png)
+![Logo do Custom Tetris](https://github.com/GuDevBot/games.custom-tetris/blob/main/assets/images/tetris.png)
 
 Um projeto de jogo Tetris clássico, construído do zero com o framework Flutter. Este repositório documenta a jornada de desenvolvimento, desde a lógica principal do jogo até a implementação de funcionalidades como áudio e pontuação.
 
