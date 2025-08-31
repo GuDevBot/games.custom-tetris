@@ -1,71 +1,71 @@
-# Custom Tetris com Flutter
+# Custom Tetris with Flutter
 
-![Logo do Custom Tetris](https://github.com/GuDevBot/games.custom-tetris/blob/main/assets/images/tetris.png)
+![Custom Tetris Logo](https://github.com/GuDevBot/games.custom-tetris/blob/main/assets/images/tetris.png)
 
-Um projeto de jogo Tetris clássico, construído do zero com o framework Flutter. Este repositório documenta a jornada de desenvolvimento, desde a lógica principal do jogo até a implementação de funcionalidades como áudio e pontuação.
-
----
-
-## ✨ Funcionalidades Principais
-
-* **Gameplay Clássica:** Movimentação, rotação e encaixe de peças (Tetrominós).
-* **Sistema de Pontuação:** Ganhe pontos ao aterrissar peças e bônus ao limpar múltiplas linhas de uma vez.
-* **Áudio Imersivo:** Música de fundo contínua e efeitos sonoros para ações importantes, como limpar linhas e aterrissar peças.
-* **Controles Intuitivos:** Interface com botões para movimentação, rotação e para acelerar a queda da peça ("soft drop").
-* **Pause e Game Over:** Funcionalidade completa para pausar/retomar o jogo e uma tela de "Game Over" ao final.
-* **Multiplataforma:** Desenvolvido para rodar em Android, Linux e Web.
+A classic Tetris game project, built from scratch with the Flutter framework. This repository documents the development journey, from the core game logic to the implementation of features like audio and scoring.
 
 ---
 
-## 🚀 Como Rodar o Projeto
+## ✨ Key Features
 
-Para executar este projeto em sua máquina local, siga os passos abaixo.
+* **Classic Gameplay:** Movement, rotation, and fitting of pieces (Tetrominoes).
+* **Scoring System:** Earn points for landing pieces and get bonuses for clearing multiple lines at once.
+* **Immersive Audio:** Continuous background music and sound effects for key actions, like clearing lines and landing pieces.
+* **Intuitive Controls:** A user interface with buttons for movement, rotation, and accelerating the piece's fall ("soft drop").
+* **Pause & Game Over:** Full functionality to pause/resume the game and a "Game Over" screen at the end.
+* **Cross-Platform:** Developed to run on Android, Linux, and Web.
 
-### Pré-requisitos
+---
 
-Antes de começar, certifique-se de que você tem o seguinte instalado:
+## 🚀 Getting Started
 
-* **Flutter SDK:** [Guia oficial de instalação](https://flutter.dev/docs/get-started/install)
-* **Git:** Para clonar o repositório.
-* Um editor de código, como **VS Code** ou **Android Studio**.
+To run this project on your local machine, follow the steps below.
 
-### ⚙️ Instalação e Configuração
+### Prerequisites
 
-1.  **Clone o repositório:**
+Before you begin, ensure you have the following installed:
+
+* **Flutter SDK:** [Official installation guide](https://flutter.dev/docs/get-started/install)
+* **Git:** To clone the repository.
+* A code editor, such as **VS Code** or **Android Studio**.
+
+### ⚙️ Installation and Setup
+
+1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/seu-usuario/custom-tetris.git](https://github.com/seu-usuario/custom-tetris.git)
+    git clone [https://github.com/your-username/custom-tetris.git](https://github.com/your-username/custom-tetris.git)
     ```
 
-2.  **Navegue até o diretório do projeto:**
+2.  **Navigate to the project directory:**
     ```bash
     cd custom-tetris
     ```
 
-3.  **Instale as dependências do Flutter:**
+3.  **Install the Flutter dependencies:**
     ```bash
     flutter pub get
     ```
 
-### 🎮 Executando a Aplicação
+### 🎮 Running the Application
 
-#### Para Windows, macOS, Android e Web
+#### For Windows, macOS, Android, and Web
 
-Após instalar as dependências, o projeto deve rodar sem configurações adicionais.
+After installing the dependencies, the project should run without any additional configuration.
 
 ```bash
-# O Flutter mostrará uma lista de dispositivos conectados.
-# Escolha o de sua preferência (ex: Android, Chrome).
+# Flutter will show a list of connected devices.
+# Choose your preferred device (e.g., Android, Chrome).
 flutter run
 ```
 
-#### Configuração Especial para Linux
+#### Special Setup for Linux
 
-O pacote de áudio (`audioplayers`) requer uma biblioteca de sistema chamada **GStreamer** para funcionar no Linux. Se você estiver em uma distribuição baseada em Debian/Ubuntu, instale as dependências necessárias com o seguinte comando:
+The audio package (`audioplayers`) used in this project requires a system library called **GStreamer** to work on Linux. If you are on a Debian/Ubuntu-based distribution, install the necessary dependencies with the following command:
 
 ```bash
 sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good
 ```
-Após a instalação, limpe o cache do Flutter antes de executar:
+After the installation, clean the Flutter build cache before running:
 ```bash
 flutter clean
 flutter run
@@ -73,9 +73,9 @@ flutter run
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 🛠️ Tech Stack
 
-* **[Flutter](https://flutter.dev/)**: Framework principal para o desenvolvimento da UI e da lógica.
-* **[Dart](https://dart.dev/)**: Linguagem de programação utilizada.
-* **[audioplayers](https://pub.dev/packages/audioplayers)**: Pacote para gerenciamento de música e efeitos sonoros.
-* **[flutter_launcher_icons](https://pub.dev/packages/flutter_launcher_icons)**: Utilizado para gerar os ícones do aplicativo para Android e iOS.
+* **[Flutter](https://flutter.dev/)**: The main framework for UI and logic development.
+* **[Dart](https://dart.dev/)**: The programming language used.
+* **[audioplayers](https://pub.dev/packages/audioplayers)**: A package for managing music and sound effects.
+* **[flutter_launcher_icons](https://pub.dev/packages/flutter_launcher_icons)**: Used to generate the app icons for Android and iOS.
