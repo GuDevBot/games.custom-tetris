@@ -24,6 +24,7 @@ class _GameBoardState extends State<GameBoard> {
   bool gameOver = false;
   bool isPaused = false;
   Timer? gameTimer;
+  Timer? _moveDownTimer;
 
   final AudioPlayer backgroundMusicPlayer = AudioPlayer();
   final AudioPlayer soundEffectPlayer = AudioPlayer();
@@ -38,9 +39,7 @@ class _GameBoardState extends State<GameBoard> {
     ),
     iOS: AudioContextIOS(
       category: AVAudioSessionCategory.playback,
-      options: {
-        AVAudioSessionOptions.mixWithOthers,
-      },
+      options: {AVAudioSessionOptions.mixWithOthers},
     ),
   );
 
@@ -52,24 +51,21 @@ class _GameBoardState extends State<GameBoard> {
       usageType: AndroidUsageType.game,
       audioFocus: AndroidAudioFocus.gainTransientMayDuck,
     ),
-    iOS: AudioContextIOS(
-      category: AVAudioSessionCategory.ambient,
-    ),
+    iOS: AudioContextIOS(category: AVAudioSessionCategory.ambient),
   );
-
 
   @override
   void initState() {
     super.initState();
     backgroundMusicPlayer.setAudioContext(_audioContextMusic);
     soundEffectPlayer.setAudioContext(_audioContextEffects);
-    
+
     startGame();
   }
-  
+
   @override
   void dispose() {
-    gameTimer?.cancel(); 
+    gameTimer?.cancel();
     backgroundMusicPlayer.dispose();
     soundEffectPlayer.dispose();
     super.dispose();
@@ -77,7 +73,7 @@ class _GameBoardState extends State<GameBoard> {
 
   void startGame() {
     playBackgroundMusic();
-    
+
     createNewPiece();
     Duration frameRate = const Duration(milliseconds: 600);
     gameLoop(frameRate);
@@ -109,7 +105,7 @@ class _GameBoardState extends State<GameBoard> {
       });
     });
   }
-  
+
   void togglePause() {
     setState(() {
       isPaused = !isPaused;
@@ -131,24 +127,35 @@ class _GameBoardState extends State<GameBoard> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text("Game Over"),
-        content: Text("Score: $score"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              resetGame();
-              Navigator.pop(context);
-            },
-            child: const Text("Play Again"),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: Colors.blueGrey,
+            title: const Text(
+              "Game Over",
+              style: TextStyle(fontSize: 28, color: Colors.white),
+            ),
+            content: Text(
+              "Score: $score",
+              style: const TextStyle(fontSize: 24, color: Colors.white),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  resetGame();
+                  Navigator.pop(context);
+                },
+                child: const Text("Play Again"),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
   void resetGame() {
-    gameBoard = List.generate(colLength, (i) => List.generate(rowLength, (j) => null));
+    gameBoard = List.generate(
+      colLength,
+      (i) => List.generate(rowLength, (j) => null),
+    );
     gameOver = false;
     isPaused = false;
     score = 0;
@@ -192,7 +199,7 @@ class _GameBoardState extends State<GameBoard> {
         }
       }
     }
-    
+
     setState(() {
       score += pointsPerPiece;
     });
@@ -216,10 +223,11 @@ class _GameBoardState extends State<GameBoard> {
   void createNewPiece() {
     if (isPaused) return;
     Random rand = Random();
-    Tetronimo randomType = Tetronimo.values[rand.nextInt(Tetronimo.values.length)];
+    Tetronimo randomType =
+        Tetronimo.values[rand.nextInt(Tetronimo.values.length)];
     currentPiece = Piece(type: randomType);
   }
-  
+
   void clearLines() {
     int linesCleared = 0;
     for (int row = colLength - 1; row >= 0; row--) {
@@ -266,13 +274,26 @@ class _GameBoardState extends State<GameBoard> {
       });
     }
   }
-  
+
   void moveDown() {
     if (isPaused) return;
     if (!checkCollision(Direction.down, currentPiece)) {
       setState(() {
         currentPiece.movePiece(Direction.down);
       });
+    }
+  }
+
+  void startContinuousMoveDown() {
+    moveDown();
+    _moveDownTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      moveDown();
+    });
+  }
+
+  void stopContinuousMoveDown() {
+    if (_moveDownTimer != null && _moveDownTimer!.isActive) {
+      _moveDownTimer!.cancel();
     }
   }
 
@@ -325,7 +346,8 @@ class _GameBoardState extends State<GameBoard> {
                     for (int i = 0; i < currentPiece.shape.length; i++) {
                       for (int j = 0; j < currentPiece.shape[i].length; j++) {
                         if (currentPiece.shape[i][j] == 1) {
-                          if (currentPiece.row + i == row && currentPiece.col + j == col) {
+                          if (currentPiece.row + i == row &&
+                              currentPiece.col + j == col) {
                             isCurrentPiecePixel = true;
                             break;
                           }
@@ -349,10 +371,36 @@ class _GameBoardState extends State<GameBoard> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    IconButton(onPressed: isPaused ? null : moveLeft, color: Colors.white, icon: const Icon(Icons.arrow_back_ios_new)),
-                    IconButton(onPressed: isPaused ? null : rotatePiece, color: Colors.white, icon: const Icon(Icons.rotate_right)),
-                    IconButton(onPressed: isPaused ? null : moveDown, color: Colors.white, icon: const Icon(Icons.arrow_downward)),
-                    IconButton(onPressed: isPaused ? null : moveRight, color: Colors.white, icon: const Icon(Icons.arrow_forward_ios)),
+                    IconButton(
+                      onPressed: isPaused ? null : moveLeft,
+                      color: Colors.white,
+                      icon: const Icon(Icons.arrow_back_ios_new, size: 40),
+                    ),
+                    IconButton(
+                      onPressed: isPaused ? null : rotatePiece,
+                      color: Colors.white,
+                      icon: const Icon(Icons.rotate_right, size: 40),
+                    ),
+                    GestureDetector(
+                      onLongPressStart: (_) {
+                        if (!isPaused) {
+                          startContinuousMoveDown();
+                        }
+                      },
+                      onLongPressEnd: (_) {
+                        stopContinuousMoveDown();
+                      },
+                      child: IconButton(
+                        onPressed: isPaused ? null : moveDown,
+                        color: Colors.white,
+                        icon: const Icon(Icons.arrow_downward, size: 40),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: isPaused ? null : moveRight,
+                      color: Colors.white,
+                      icon: const Icon(Icons.arrow_forward_ios, size: 40),
+                    ),
                   ],
                 ),
               ),
@@ -363,7 +411,11 @@ class _GameBoardState extends State<GameBoard> {
             child: Padding(
               padding: const EdgeInsets.only(top: 40.0, right: 20.0),
               child: IconButton(
-                icon: Icon(isPaused ? Icons.play_arrow : Icons.pause, color: Colors.white, size: 30),
+                icon: Icon(
+                  isPaused ? Icons.play_arrow : Icons.pause,
+                  color: Colors.white,
+                  size: 30,
+                ),
                 onPressed: togglePause,
               ),
             ),
@@ -385,7 +437,11 @@ class _GameBoardState extends State<GameBoard> {
                     ),
                     const SizedBox(height: 20),
                     IconButton(
-                      icon: const Icon(Icons.play_arrow, color: Colors.white, size: 50),
+                      icon: const Icon(
+                        Icons.play_arrow,
+                        color: Colors.white,
+                        size: 50,
+                      ),
                       onPressed: togglePause,
                     ),
                   ],
